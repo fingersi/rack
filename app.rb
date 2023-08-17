@@ -9,7 +9,6 @@ class App
 
     query_params.shift
     check_request(query_params)
-     puts "result_time_format= #{@result_time_format}"
     @wrong_params.empty? ? success_responce(@result_time_format) : error_responce(@wrong_params)
   end
 
