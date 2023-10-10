@@ -1,29 +1,26 @@
 class App
  
   def call(env)
-    @result_time_format = []
-    @wrong_params = []
-    redexp = /=|%2C/
-    query_params = env['QUERY_STRING'].to_s.split(redexp)
-    return send_no_page if env['REQUEST_PATH'] != '/time'
+    query_params = env['QUERY_STRING'].to_s.split(/=|%2C/)
+    return send_responce(no_page_status, no_page_body) if env['REQUEST_PATH'] != '/time'
 
-    query_params.shift
-    check_request(query_params)
-    @wrong_params.empty? ? success_responce(@result_time_format) : error_responce(@wrong_params)
+    check_result = check_request(query_params)
+    if check_result[:errors].empty?
+      send_responce(success_status, check_result[:time_in_format])
+    else
+      send_responce(bad_params_status, check_result[:errors])
+    end
   end
 
   private
 
-  def success_responce(time_params)
-    [success_status, headers, ["#{DateTime.now.strftime(time_params.join('-'))} \n"]]
+  def send_responce(status, body)
+    responce = Rack::Response.new( 200, [ 'Content-Type' => 'application/json' ], ['d', '3'])
+    [status, headers, [body]]
   end
 
-  def error_responce(wrong_params)
-    [bab_params_status, headers, ["Unknown time format #{wrong_params.join(', ')} \n"]]
-  end
-
-  def send_no_page
-    [no_page_status, headers, ["not found \n"]]
+  def no_page_body
+    ["not found \n"]
   end
 
   def success_status
@@ -34,7 +31,7 @@ class App
     404
   end
 
-  def bab_params_status
+  def bad_params_status
     400
   end
 
@@ -43,33 +40,23 @@ class App
   end
 
   def check_request(query_params)
+    query_params.shift
     result = []
     wrong_params = []
-    query_params.each { |query|
+    query_params.each do |query|
       format_for_result = check_query(query)
       format_for_result.nil? ? wrong_params << query : result << format_for_result
-    }
-    puts "result = #{result} "
-    @result_time_format = result
-    @wrong_params = wrong_params
+    end
+    { time_in_format: "#{DateTime.now.strftime(result.join('-'))} \n", errors: wrong_params }
   end
 
-  def  check_query(query)
-    case query
-    when 'year'
-      '%Y'
-    when 'month'
-      '%m'
-    when 'day'
-      '%d'
-    when 'hour'
-      '%h'
-    when 'minute'
-      '%M'
-    when 'second'
-      '%S'
-    else
-      nil
-    end
+  def check_query(query)
+    time_format = { year: '%Y',
+                    month: '%m',
+                    day: '%d',
+                    hour: '%h',
+                    minute: '%M',
+                    second: '%S' }
+    time_format[query.to_sym]
   end
 end
