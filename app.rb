@@ -12,15 +12,14 @@ class App
     return send_responce(NO_PAGE_STATUS, no_page_body) if env['REQUEST_PATH'] != '/time'
     
     query_params = env['QUERY_STRING'].to_s.split(/=|%2C/)
-
     return send_responce(BAD_PARAMS_STATUS, ["bad request - no 'format=' in url"]) if query_params[0] != 'format'
 
     query_params.shift
     tf = TimeFormatter.new()    
-    errors = tf.check_request(query_params)
-    return send_responce(BAD_PARAMS_STATUS, "wrong params: #{errors.join(',') }") if !errors.empty?
+    check_result = tf.time_in_format(query_params)
+    return send_responce(BAD_PARAMS_STATUS, "wrong params: #{check_result[:body]}") if check_result[:errors]
 
-    send_responce(SUCCESS_STATUS, tf.time_by_format(query_params))
+    send_responce(SUCCESS_STATUS, check_result[:body])
   end
 
   private

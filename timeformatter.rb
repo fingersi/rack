@@ -7,15 +7,16 @@ class TimeFormatter
                   minute: '%M',
                   second: '%S'}
 
-  def check_request(query_params)    
+  def time_in_format(query_params)
+    body = []
     errors = []
     query_params.each do |query|
-      errors << query if TIME_FORMAT[query.to_sym].nil?
-    end 
-    errors
-  end
+      params_in_format = TIME_FORMAT[query.to_sym]
+      params_in_format.nil? ? errors << query : body << params_in_format
+    end
 
-  def time_by_format(query_params) 
-    "#{DateTime.now.strftime(query_params.map{|query| TIME_FORMAT[query.to_sym]}.join('-'))} \n"
+    return { body: errors.join(','), errors: true } if errors.any?
+
+    { body: "#{ DateTime.now.strftime(body.join('-')) }", errors: false }
   end
 end
