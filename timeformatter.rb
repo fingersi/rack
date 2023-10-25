@@ -9,7 +9,6 @@ class TimeFormatter
 
   def time_in_format(query_params)
     body = []
-    errors = []
     query_params.each do |query|
       params_in_format = TIME_FORMAT[query.to_sym]
       params_in_format.nil? ? errors << query : body << params_in_format
