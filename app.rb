@@ -1,45 +1,35 @@
 class App
 
   require_relative 'timeformatter'
- 
+
+  NO_PAGE_BODY = "not found \n"
+  SUCCESS_STATUS = 200
+  NO_PAGE_STATUS = 404
+  BAD_PARAMS_STATUS = 400
+  HEADERS = { "Content-type" => "text/plain" }
+
   def call(env)
-    query_params = env['QUERY_STRING'].to_s.split(/=|%2C/)
-    tf = TimeFormatter.new()
-
-    return send_responce(no_page_status, no_page_body) if env['REQUEST_PATH'] != '/time'
+    return send_responce(NO_PAGE_STATUS, no_page_body) if env['REQUEST_PATH'] != '/time'
     
-    check_result = tf.check_request(query_params)
+    query_params = env['QUERY_STRING'].to_s.split(/=|%2C/)
 
-    unless check_result[:errors]
-      send_responce(success_status, check_result[:body])
-    else
-      send_responce(bad_params_status, check_result[:body])
-    end
+    return send_responce(BAD_PARAMS_STATUS, ["bad request - no 'format=' in url"]) if query_params[0] != 'format'
+
+    query_params.shift
+    tf = TimeFormatter.new()    
+    errors = tf.check_request(query_params)
+    return send_responce(BAD_PARAMS_STATUS, "wrong params: #{errors.join(',') }") if !errors.empty?
+
+    send_responce(SUCCESS_STATUS, tf.time_by_format(query_params))
   end
 
   private
 
   def send_responce(status, body)
-    [status, headers, [body]]
-  end
-
-  def no_page_body
-    "not found \n"
-  end
-
-  def success_status
-    200
-  end
-
-  def no_page_status
-    404
-  end
-
-  def bad_params_status
-    400
-  end
-
-  def headers
-    { "Content-type" => "text/plain" }
+    res = Rack::Response.new  
+    res.status = status
+    res.header['Content_Type'] = 'text/plain'
+    res.write(body) 
+    res.finish
   end
 end
