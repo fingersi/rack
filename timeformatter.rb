@@ -7,15 +7,28 @@ class TimeFormatter
                   minute: '%M',
                   second: '%S'}
 
-  def time_in_format(query_params)
-    body = []
+  def initialize(query_params)
+    @body = []
+    @errors = []
+    check_params(@body, @errors,query_params)
+  end
+
+  def check_params(body, errors, query_params)
     query_params.each do |query|
       params_in_format = TIME_FORMAT[query.to_sym]
       params_in_format.nil? ? errors << query : body << params_in_format
     end
+  end
 
-    return { body: errors.join(','), errors: true } if errors.any?
+  def valid?
+    @errors.empty?
+  end
 
-    { body: "#{ DateTime.now.strftime(body.join('-')) }", errors: false }
+  def time_string
+    "#{ DateTime.now.strftime(@body.join('-')) }"
+  end
+
+  def error_string
+    "wrong parameters: #{@errors.join(',')}"
   end
 end

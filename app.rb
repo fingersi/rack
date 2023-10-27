@@ -15,11 +15,12 @@ class App
     return send_responce(BAD_PARAMS_STATUS, ["bad request - no 'format=' in url"]) if query_params[0] != 'format'
 
     query_params.shift
-    tf = TimeFormatter.new()    
-    check_result = tf.time_in_format(query_params)
-    return send_responce(BAD_PARAMS_STATUS, "wrong params: #{check_result[:body]}") if check_result[:errors]
-
-    send_responce(SUCCESS_STATUS, check_result[:body])
+    tf = TimeFormatter.new(query_params)
+    if tf.valid?
+      send_responce(SUCCESS_STATUS, tf.time_string)
+    else
+      send_responce(BAD_PARAMS_STATUS, tf.error_string)
+    end
   end
 
   private
