@@ -16,6 +16,7 @@ class App
 
     query_params.shift
     tf = TimeFormatter.new(query_params)
+    tf.call
     if tf.valid?
       send_responce(SUCCESS_STATUS, tf.time_string)
     else

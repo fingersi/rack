@@ -10,7 +10,11 @@ class TimeFormatter
   def initialize(query_params)
     @body = []
     @errors = []
-    check_params(@body, @errors,query_params)
+    @query_params = query_params 
+  end
+
+  def call
+    check_params(@body, @errors, @query_params)
   end
 
   def check_params(body, errors, query_params)
